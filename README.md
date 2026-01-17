@@ -1,4 +1,4 @@
-# Instagram Bulk Comment Deleter
+# Instagram Bulk Likes Remover
 
 Browser-based JavaScript utility for bulk removing Instagram likes
 from the likes activity page using Instagram’s current Bloks UI.
