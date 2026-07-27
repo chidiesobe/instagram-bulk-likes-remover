@@ -63,11 +63,22 @@
     );
   }
 
-  // Find the "Select" button to enter selection mode
+  // Get an element's own text (direct text nodes only), ignoring descendants
+  const ownText = (el) =>
+    [...el.childNodes]
+      .filter((n) => n.nodeType === 3)
+      .map((n) => n.textContent.trim())
+      .join("");
+
+  // Find the "Select" button to enter selection mode. Instagram dropped the
+  // data-bloks-name wrapper around the label, so it is now a bare <span>.
+  // Matching on the element's own text hits the innermost label (and not a
+  // large container whose innerText merely contains "Select"); clicking it
+  // works because the event bubbles to the real handler.
   function findSelectButton() {
-    return [...document.querySelectorAll(
-      'div[data-bloks-name="bk.components.Flexbox"]',
-    )].find((el) => el.innerText?.trim() === "Select");
+    return [...document.querySelectorAll("span, div")].find(
+      (el) => ownText(el) === "Select",
+    );
   }
 
   // Activate selection mode by clicking the "Select" button
