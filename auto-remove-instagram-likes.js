@@ -63,11 +63,19 @@
     );
   }
 
-  // Find the "Select" button to enter selection mode
+  // Get an element's own text (direct text nodes only), ignoring descendants
+  const ownText = (el) =>
+    [...el.childNodes]
+      .filter((n) => n.nodeType === 3)
+      .map((n) => n.textContent.trim())
+      .join("");
+
+  // Find the "Select" button to enter selection mode. Matching direct text
+  // hits the innermost label even when Instagram changes wrapper markup.
   function findSelectButton() {
-    return [...document.querySelectorAll(
-      'div[data-bloks-name="bk.components.Flexbox"]',
-    )].find((el) => el.innerText?.trim() === "Select");
+    return [...document.querySelectorAll("span, div")].find(
+      (el) => ownText(el) === "Select",
+    );
   }
 
   // Activate selection mode by clicking the "Select" button
@@ -80,20 +88,31 @@
 
   // Get all selectable like icons in the current view
   function getSelectableIcons() {
-    return document.querySelectorAll(
-      'div[data-bloks-name="ig.components.Icon"][style*="circle__outline"]',
-    );
+    return document.querySelectorAll('[role="button"][aria-label="Toggle checkbox"]');
+  }
+
+  function getDiagnostics() {
+    return {
+      url: location.href,
+      selectLabels: [...document.querySelectorAll("span, div")]
+        .filter((el) => ownText(el) === "Select")
+        .length,
+      checkboxButtons: getSelectableIcons().length,
+      unlikeSvgs: document.querySelectorAll('svg[aria-label="Unlike"]').length,
+      unlikeTextButtons: [...document.querySelectorAll("button, span, div")]
+        .filter((el) => ownText(el) === "Unlike" || el.innerText?.trim() === "Unlike")
+        .length,
+      loadingIndicators: document.querySelectorAll('[role="progressbar"]').length,
+    };
   }
 
   // Select likes up to the specified maximum
   async function selectLikes(max) {
-    const icons = getSelectableIcons();
+    const buttons = getSelectableIcons();
     let count = 0;
 
-    for (const icon of icons) {
+    for (const btn of buttons) {
       if (count >= max) break;
-      const btn = icon.closest('[role="button"]');
-      if (!btn) continue;
 
       realClick(btn);
       count++;
@@ -156,6 +175,7 @@
       await sleep(CYCLE_DELAY);
     } catch (e) {
       console.warn("Stopped:", e.message);
+      console.table(getDiagnostics());
       break;
     }
   }
